@@ -18,8 +18,10 @@
             <h1>Karantän</h1>
             <small id="version-text">...</small>
         </div>
+        <div id="info">
+        </div>
         <div class="foot">
-            <progress id="progressbar"></progress>
+            <progress id="progressbar" value="0"></progress>
             <button id="start-game" disabled>Start</button>
         </div>
     </div>
@@ -30,6 +32,7 @@
         const progress = document.getElementById('progressbar');
 
         const closeBtn = document.getElementById('closebtn');
+        const info = document.getElementById('info');
 
         ipcRenderer.on('enableStart', () => {
             startGame.attributes.removeNamedItem("disabled");
@@ -38,6 +41,10 @@
 
         ipcRenderer.on('setProgress', (e, p) => {
             progress.value = p;
+        });
+
+        ipcRenderer.on('message', (e, p) => {
+            info.innerHTML = p;
         });
 
         ipcRenderer.on('manifestInfo', (e, data) => {

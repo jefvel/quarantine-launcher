@@ -1,6 +1,6 @@
 {
   "name": "karanten",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": "index.js",
   "license": "MIT",
   "author": "jefvel",
@@ -32,6 +32,8 @@
   },
   "dependencies": {
     "electron-dl": "^3.0.2",
+    "electron-log": "^4.3.1",
+    "electron-updater": "^4.3.5",
     "node-fetch": "^2.6.1",
     "unzipper": "^0.10.11"
   },

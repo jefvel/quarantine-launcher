@@ -1,4 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
+const log = require('electron-log');
+const { autoUpdater } = require("electron-updater")
 const electronDL = require('electron-dl');
 
 const { spawn } = require('child_process');
@@ -16,6 +18,10 @@ const manifestFile = 'manifest.json';
 let userDir;
 let downloadDir;
 let manifestPath;
+
+autoUpdater.logger = log;
+autoUpdater.logger.transports.file.level = 'info';
+log.info('App starting...');
 
 function loadValues() {
     userDir = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share");
@@ -45,20 +51,34 @@ let win;
 
     win.webContents.on('did-finish-load', () => {
         loadValues();
-
-        win.webContents.send('setProgress', 0.0);
-
-        fetch(`${downloadURL}/${manifestFile}`, { method: 'get' })
-            .then(res => res.json())
-            .then(manifest => {
-                readManifest(manifest);
-            });
+        autoUpdater.checkForUpdatesAndNotify().then(r => {
+            if (r == null) {
+                loadManifestFile();
+            }
+            else {
+                console.log(r);
+            }
+        });
     });
 })();
 
+let loadingManifest = false;
+async function loadManifestFile() {
+    if (loadingManifest) {
+        return;
+    }
+
+    loadingManifest = true;
+
+    fetch(`${downloadURL}/${manifestFile}`, { method: 'get' })
+        .then(res => res.json())
+        .then(manifest => {
+            readManifest(manifest);
+        });
+}
+
 async function readManifest(manifest) {
-    let rawdata = fs.writeFileSync(manifestPath, manifest);
-    //let manifest = JSON.parse(rawdata);
+    fs.writeFileSync(manifestPath, manifest);
 
     const zipFile = `${downloadDir}/${manifest.path}`;
 
@@ -79,6 +99,7 @@ async function readManifest(manifest) {
     e.on("close", () => {
         gameReady = true;
         win.webContents.send('enableStart');
+        sendStatusToWindow('Game Ready');
     });
 };
 
@@ -115,4 +136,36 @@ ipcMain.on("launchGame", function (event, arg) {
 
 ipcMain.on("closeLauncher", function (event, arg) {
     exit();
+});
+
+function sendStatusToWindow(text) {
+  log.info(text);
+  win.webContents.send('message', text);
+}
+
+autoUpdater.on('checking-for-update', () => {
+  sendStatusToWindow('Checking for update...');
+})
+autoUpdater.on('update-available', (info) => {
+  sendStatusToWindow('Update available.');
+})
+autoUpdater.on('update-not-available', (info) => {
+  sendStatusToWindow('Update not available.');
+  loadManifestFile();
+})
+
+autoUpdater.on('error', (err) => {
+  sendStatusToWindow('Error in auto-updater. ' + err);
+})
+
+autoUpdater.on('download-progress', (progressObj) => {
+    win.webContents.send('setProgress', progressObj.percent / 100.0);
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+  sendStatusToWindow('Update downloaded');
+  autoUpdater.quitAndInstall();
+});
+
+app.on('ready', () => {
 });
