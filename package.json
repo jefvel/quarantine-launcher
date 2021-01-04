@@ -10,11 +10,15 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
 "pack": "electron-builder --dir",
-  "dist": "electron-builder"
+  "dist": "electron-builder",
+  "release": "build"
 
   },
   "build": {
-    "appId":"jefvel.karanten"
+    "appId":"jefvel.karanten",
+    "win": {
+      "publish":["github"]
+    }
   },
   "devDependencies": {
     "@electron-forge/cli": "^6.0.0-beta.54",
