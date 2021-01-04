@@ -1,6 +1,6 @@
 {
   "name": "karanten",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "index.js",
   "license": "MIT",
   "author": "jefvel",
@@ -9,15 +9,17 @@
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
-"pack": "electron-builder --dir",
-  "dist": "electron-builder",
-  "release": "build"
-
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "release": "build"
   },
   "build": {
-    "appId":"jefvel.karanten",
+    "appId": "jefvel.karanten",
+    "productName": "Quarantine Launcher",
     "win": {
-      "publish":["github"]
+      "publish": [
+        "github"
+      ]
     }
   },
   "devDependencies": {
