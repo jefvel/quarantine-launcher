@@ -24,6 +24,7 @@
             <progress id="progressbar" value="0"></progress>
             <button id="start-game" disabled>Start</button>
         </div>
+        <div id="launcherVersion"></div>
     </div>
     <script type="text/javascript">
         // include the ipc module to communicate with main process.
@@ -33,6 +34,12 @@
 
         const closeBtn = document.getElementById('closebtn');
         const info = document.getElementById('info');
+
+        const launcherVersion = document.getElementById('launcherVersion');
+
+        ipcRenderer.on('launcherVersion', (e, version) => {
+            launcherVersion.innerHTML = 'Launcher ' + version;
+        });
 
         ipcRenderer.on('enableStart', () => {
             startGame.attributes.removeNamedItem("disabled");

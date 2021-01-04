@@ -32,6 +32,8 @@ function loadValues() {
     });
 }
 
+const launcherVersion = require('./package.json').version;
+
 let win;
 (async () => {
     await app.whenReady();
@@ -51,6 +53,7 @@ let win;
 
     win.webContents.on('did-finish-load', () => {
         loadValues();
+        win.webContents.send('launcherVersion', launcherVersion);
         autoUpdater.checkForUpdatesAndNotify().then(r => {
             if (r == null) {
                 loadManifestFile();
