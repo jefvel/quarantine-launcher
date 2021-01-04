@@ -89,7 +89,7 @@ async function readManifest(manifest) {
 
     if (!fs.existsSync(zipFile)) {
         sendStatusToWindow('Downloading New Game Files');
-        const result = await download(win, `${downloadURL}/versions/${manifest.path}`, {
+        await download(win, `${downloadURL}/versions/${manifest.path}`, {
             onProgress: p => {
                 win.webContents.send('setProgress', p.percent);
             },
@@ -151,7 +151,7 @@ autoUpdater.on('checking-for-update', () => {
   sendStatusToWindow('Checking for launcher update...');
 })
 autoUpdater.on('update-available', (info) => {
-  sendStatusToWindow('Update available.');
+  sendStatusToWindow('Update available. Downloading...');
 })
 autoUpdater.on('update-not-available', (info) => {
   sendStatusToWindow('Launcher is up to date');
@@ -163,7 +163,7 @@ autoUpdater.on('error', (err) => {
 })
 
 autoUpdater.on('download-progress', (progressObj) => {
-    win.webContents.send('setProgress', progressObj.percent / 100.0);
+    win.webContents.send('setProgress', progressObj.percent);
 });
 
 autoUpdater.on('update-downloaded', (info) => {
