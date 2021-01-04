@@ -88,6 +88,7 @@ async function readManifest(manifest) {
     win.webContents.send('manifestInfo', manifest);
 
     if (!fs.existsSync(zipFile)) {
+        sendStatusToWindow('Downloading New Game Files');
         const result = await download(win, `${downloadURL}/versions/${manifest.path}`, {
             onProgress: p => {
                 win.webContents.send('setProgress', p.percent);
@@ -147,13 +148,13 @@ function sendStatusToWindow(text) {
 }
 
 autoUpdater.on('checking-for-update', () => {
-  sendStatusToWindow('Checking for update...');
+  sendStatusToWindow('Checking for launcher update...');
 })
 autoUpdater.on('update-available', (info) => {
   sendStatusToWindow('Update available.');
 })
 autoUpdater.on('update-not-available', (info) => {
-  sendStatusToWindow('Update not available.');
+  sendStatusToWindow('Launcher is up to date');
   loadManifestFile();
 })
 
