@@ -1,27 +1,43 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>Karantän Launcher</title>
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
 </head>
+
 <body>
     <div class="content">
+        <div id="closebtn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </div>
         <div class="head">
             <h1>Karantän</h1>
             <small id="version-text">...</small>
         </div>
         <div class="foot">
+            <progress id="progressbar"></progress>
             <button id="start-game" disabled>Start</button>
         </div>
     </div>
     <script type="text/javascript">
         // include the ipc module to communicate with main process.
-        const ipcRenderer = require('electron').ipcRenderer; 
+        const ipcRenderer = require('electron').ipcRenderer;
+        const startGame = document.getElementById('start-game');
+        const progress = document.getElementById('progressbar');
 
-        const btnclick = document.getElementById('start-game');
+        const closeBtn = document.getElementById('closebtn');
+
         ipcRenderer.on('enableStart', () => {
-            btnclick.attributes.removeNamedItem("disabled");
+            startGame.attributes.removeNamedItem("disabled");
+            progress.value = 1;
+        });
+
+        ipcRenderer.on('setProgress', (e, p) => {
+            progress.value = p;
         });
 
         ipcRenderer.on('manifestInfo', (e, data) => {
@@ -29,13 +45,15 @@
             info.innerHTML = `v. ${data.version}`;
         });
 
-        btnclick.addEventListener('click', function () {
-            var arg ="secondparam";
-        
-        //send the info to main process . we can pass any arguments as second param.
-            ipcRenderer.send("btnclick", arg); // ipcRender.send will pass the information to main process
+        closeBtn.addEventListener('click', function () {
+            ipcRenderer.send("closeLauncher");
+        });
+
+        startGame.addEventListener('click', function () {
+            ipcRenderer.send("launchGame");
         });
     </script>
     <link rel="stylesheet" href="style.css">
 </body>
+
 </html>

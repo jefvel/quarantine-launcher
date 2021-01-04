@@ -17,6 +17,14 @@ body {
     margin: 0;
 }
 
+h1 {
+    margin-bottom: 0.1em;
+    font-size: 64px;
+}
+small {
+    font-size: 36px;
+}
+
 button {
     font-family: "Ruler Gold", sans-serif;
     background-color: rgb(28, 35, 65);
@@ -44,6 +52,27 @@ div, html, body, * {
     flex-direction: column;
 }
 
+#closebtn {
+    position: absolute;
+    right: 0;
+    top: 4px;
+    padding: 4px 5px;
+    padding-bottom: 1px;
+    cursor: pointer;
+    -webkit-app-region:none;
+}
+
+#closebtn:hover {
+    background-color: red;
+}
+
+#closebtn svg {
+    width: 24px;
+    height: 24px;
+    margin: 0;
+    padding: 0;
+}
+
 button:disabled {
     opacity: 0.5;
     cursor: default;
@@ -54,5 +83,33 @@ button:disabled {
 }
 
 .foot {
-    text-align: right;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding-bottom: 1.5em;
+}
+
+.foot button {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+#progressbar {
+    border: none;
+    flex-grow: 1;
+    height: 71px;
+    border-radius: 4px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    background-color: #fefefe;
+    overflow: hidden;
+}
+
+progress::-webkit-progress-bar {
+    border: 0;
+    background-color: #fefefe;
+}
+
+progress::-webkit-progress-value {
+    border: 0;
 }

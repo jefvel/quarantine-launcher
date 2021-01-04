@@ -1,4 +1,4 @@
-const { app, BrowserWindow, remote } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const electronDL = require('electron-dl');
 
 const { spawn } = require('child_process');
@@ -8,7 +8,7 @@ const unzipper = require('unzipper');
 
 const fs = require('fs');
 const { exit } = require('process');
-const {download} = electronDL;
+const { download } = electronDL;
 
 const downloadURL = 'https://int.jefvel.net/~jefvel/gamemanifest';
 const manifestFile = 'manifest.json';
@@ -26,8 +26,6 @@ function loadValues() {
     });
 }
 
-
-
 let win;
 (async () => {
     await app.whenReady();
@@ -39,7 +37,7 @@ let win;
         transparent: true,
         resizable: false,
         webPreferences: {
-        nodeIntegration: true
+            nodeIntegration: true
         }
     });
 
@@ -48,11 +46,13 @@ let win;
     win.webContents.on('did-finish-load', () => {
         loadValues();
 
-        fetch(`${downloadURL}/${manifestFile}`, {method: 'get'})
-        .then(res => res.json())
-        .then(manifest => {
-            readManifest(manifest);
-        });
+        win.webContents.send('setProgress', 0.0);
+
+        fetch(`${downloadURL}/${manifestFile}`, { method: 'get' })
+            .then(res => res.json())
+            .then(manifest => {
+                readManifest(manifest);
+            });
     });
 })();
 
@@ -64,15 +64,17 @@ async function readManifest(manifest) {
 
     win.webContents.send('manifestInfo', manifest);
 
-    if (!fs.existsSync(zipFile)){
+    if (!fs.existsSync(zipFile)) {
         const result = await download(win, `${downloadURL}/versions/${manifest.path}`, {
+            onProgress: p => {
+                win.webContents.send('setProgress', p.percent);
+            },
             directory: downloadDir,
         });
     }
 
-
     const e = fs.createReadStream(zipFile)
-    .pipe(unzipper.Extract({ path: `${downloadDir}/bin/latest`}));
+        .pipe(unzipper.Extract({ path: `${downloadDir}/bin/latest` }));
 
     e.on("close", () => {
         gameReady = true;
@@ -88,7 +90,7 @@ function launchGame() {
     }
 
     spawn(`${downloadDir}/bin/latest/quarantine.exe`, [`${downloadDir}/bin/latest/hlboot.dat`], {
-        cwd:`${downloadDir}`,
+        cwd: `${downloadDir}`,
         detached: true,
     });
 
@@ -96,20 +98,21 @@ function launchGame() {
 }
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
+    if (process.platform !== 'darwin') {
+        app.quit()
+    }
 })
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow()
-  }
+    if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow()
+    }
 })
 
-const {ipcMain} = require('electron'); // include the ipc module to communicate with render process ie to receive the message from render process
- 
-//ipcMain.on will receive the “btnclick” info from renderprocess 
-ipcMain.on("btnclick",function (event, arg) {
+ipcMain.on("launchGame", function (event, arg) {
     launchGame();
+});
+
+ipcMain.on("closeLauncher", function (event, arg) {
+    exit();
 });
