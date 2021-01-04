@@ -1,0 +1,61 @@
+{
+  "name": "karanten",
+  "version": "1.0.1",
+  "main": "index.js",
+  "license": "MIT",
+  "author": "jefvel",
+  "description": "Karantänspelet",
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+"pack": "electron-builder --dir",
+  "dist": "electron-builder"
+
+  },
+  "build": {
+    "appId":"jefvel.karanten"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^6.0.0-beta.54",
+    "@electron-forge/maker-deb": "^6.0.0-beta.54",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.54",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.54",
+    "@electron-forge/maker-zip": "^6.0.0-beta.54",
+    "electron": "^11.1.1",
+    "electron-builder": "^22.9.1",
+    "electron-squirrel-startup": "^1.0.0"
+  },
+  "dependencies": {
+    "electron-dl": "^3.0.2",
+    "node-fetch": "^2.6.1",
+    "unzipper": "^0.10.11"
+  },
+  "config": {
+    "forge": {
+      "packagerConfig": {},
+      "makers": [
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "name": "quarantinelauncher"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "darwin"
+          ]
+        },
+        {
+          "name": "@electron-forge/maker-deb",
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-rpm",
+          "config": {}
+        }
+      ]
+    }
+  }
+}

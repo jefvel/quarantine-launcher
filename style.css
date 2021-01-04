@@ -1,0 +1,58 @@
+html {
+    background-color: transparent;
+    -webkit-app-region: drag;
+}
+
+@font-face {
+  font-family: "Ruler Gold";
+  font-smooth: never;
+  -webkit-font-smoothing: none;
+  src: url(assets/RulerGold.woff) format("woff");
+}
+
+body {
+    font-family: "Ruler Gold", sans-serif;
+    font-size: 24px;
+    padding: 0;
+    margin: 0;
+}
+
+button {
+    font-family: "Ruler Gold", sans-serif;
+    background-color: rgb(28, 35, 65);
+    color: #fefefe;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    padding: 1em 2em;
+    cursor: pointer;
+    -webkit-app-region:none;
+}
+
+div, html, body, * {
+    box-sizing: border-box;
+}
+
+.content {
+    border-top: 4px solid #3f3d5e;
+    border-radius: 4px;
+    background-color: #0f0e1b;
+    color: #fafafa;
+    padding: 2em 3em;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.head {
+    flex-grow: 1;
+}
+
+.foot {
+    text-align: right;
+}
