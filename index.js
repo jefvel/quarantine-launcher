@@ -55,14 +55,18 @@ let win;
     win.webContents.on('did-finish-load', () => {
         loadValues();
         win.webContents.send('launcherVersion', launcherVersion);
-        autoUpdater.checkForUpdatesAndNotify().then(r => {
-            if (r == null) {
-                loadManifestFile();
-            }
-            else {
-                console.log(r);
-            }
-        });
+        if (os.platform() === 'win32') {
+            autoUpdater.checkForUpdatesAndNotify().then(r => {
+                if (r == null) {
+                    loadManifestFile();
+                }
+                else {
+                    console.log(r);
+                }
+            });
+        } else {
+            loadManifestFile();
+        }
     });
 })();
 
@@ -280,7 +284,7 @@ autoUpdater.on('error', (err) => {
 })
 
 autoUpdater.on('download-progress', (progressObj) => {
-    win.webContents.send('setProgress', progressObj.percent);
+    win.webContents.send('setProgress', progressObj.percent / 100.0);
 });
 
 autoUpdater.on('update-downloaded', (info) => {
