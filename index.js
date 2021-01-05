@@ -204,7 +204,7 @@ async function readManifest() {
             e.on("close", () => {
                 const exeFile = `${appDir}/bin/quarantine`;
                 const platform = os.platform();
-                
+
                 if (platform === 'darwin' || platform === 'linux') {
                     fs.chmodSync(exeFile, '755');
                 }
@@ -239,8 +239,10 @@ function launchGame() {
 
     const exeDir = `${appDir}/bin`;
 
-    const child = spawn(`${exeDir}/quarantine`, [`${exeDir}/hlboot.dat`], {
-        cwd: `${appDir}`,
+    const saveDir = `${appDir}`;
+
+    const child = spawn(`${exeDir}/quarantine`, [`${exeDir}/hlboot.dat`, saveDir], {
+        cwd: `${exeDir}`,
     });
 
     win.hide();
