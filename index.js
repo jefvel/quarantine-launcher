@@ -234,10 +234,13 @@ function launchGame() {
 
     const exeDir = `${appDir}/bin`;
 
-    spawn(`${exeDir}/quarantine`, [`${exeDir}/hlboot.dat`], {
+    const child = spawn(`${exeDir}/quarantine`, [`${exeDir}/hlboot.dat`], {
         cwd: `${appDir}`,
         detached: true,
+        stdio: [ 'ignore', 'ignore', 'ignore' ],
     });
+
+    child.unref();
 
     exit();
 }
