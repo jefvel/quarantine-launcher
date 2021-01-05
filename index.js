@@ -236,13 +236,13 @@ function launchGame() {
 
     const child = spawn(`${exeDir}/quarantine`, [`${exeDir}/hlboot.dat`], {
         cwd: `${appDir}`,
-        detached: true,
-        stdio: [ 'ignore', 'ignore', 'ignore' ],
     });
 
-    child.unref();
+    win.hide();
 
-    exit();
+    child.on('exit', () => {
+        exit();
+    });
 }
 
 app.on('window-all-closed', () => {
