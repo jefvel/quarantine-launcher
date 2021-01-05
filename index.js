@@ -239,7 +239,7 @@ function launchGame() {
 
     const exeDir = `${appDir}/bin`;
 
-    const saveDir = `${appDir}`;
+    const saveDir = `--savedir=${appDir}`;
 
     const child = spawn(`${exeDir}/quarantine`, [`${exeDir}/hlboot.dat`, saveDir], {
         cwd: `${exeDir}`,
