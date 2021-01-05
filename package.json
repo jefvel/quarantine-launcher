@@ -23,7 +23,7 @@
       "publish": [
         "github"
       ],
-      "target": "dmg"
+      "target": ["dmg", "zip"]
     },
     "linux": {
       "publish": [
