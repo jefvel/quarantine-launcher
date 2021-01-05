@@ -97,6 +97,8 @@ function loadOldManifest() {
         } catch(e) {
             oldManifest = defaultManifest;
         }
+    } else {
+        oldManifest = defaultManifest;
     }
 }
 
@@ -195,6 +197,8 @@ async function readManifest() {
 
         let p = new Promise((resolve) => {
             e.on("close", () => {
+                const exeFile = `${appDir}/bin/quarantine`;
+                fs.chmodSync(exeFile, '755');
                 fs.unlinkSync(gameZipFile);
                 resolve();
             })
@@ -215,10 +219,13 @@ function gameReady() {
     sendStatusToWindow('Game Ready');
 }
 
+let launched = false;
 function launchGame() {
-    if (!canLaunch) {
+    if (!canLaunch || launched) {
         return;
     }
+    
+    launched = true;
 
     const exeDir = `${appDir}/bin`;
 
