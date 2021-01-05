@@ -203,7 +203,12 @@ async function readManifest() {
         let p = new Promise((resolve) => {
             e.on("close", () => {
                 const exeFile = `${appDir}/bin/quarantine`;
-                fs.chmodSync(exeFile, '755');
+                const platform = os.platform();
+                
+                if (platform === 'darwin' || platform === 'linux') {
+                    fs.chmodSync(exeFile, '755');
+                }
+
                 fs.unlinkSync(gameZipFile);
                 resolve();
             })
