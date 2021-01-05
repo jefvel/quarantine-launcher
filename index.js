@@ -113,6 +113,7 @@ function getRuntimeName() {
     switch(os.platform()) {
         case 'darwin': return 'runtime-mac';
         case 'win32': return 'runtime-win';
+        case 'linux': return 'runtime-linux';
         default: return 'runtime-win';
     }
 }
