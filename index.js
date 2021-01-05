@@ -9,6 +9,8 @@ const fetch = require('node-fetch');
 const unzipper = require('unzipper');
 
 const fs = require('fs');
+const os = require('os');
+
 const { exit } = require('process');
 const { download } = electronDL;
 
@@ -16,19 +18,18 @@ const downloadURL = 'https://int.jefvel.net/~jefvel/gamemanifest';
 const manifestFile = 'manifest.json';
 
 let userDir;
-let downloadDir;
+let appDir;
 let manifestPath;
 
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
-log.info('App starting...');
 
 function loadValues() {
     userDir = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share");
-    downloadDir = `${userDir}/karanten`;
-    manifestPath = `${downloadDir}/${manifestFile}`;
+    appDir = `${userDir}/karanten`;
+    manifestPath = `${appDir}/${manifestFile}`;
     electronDL({
-        directory: downloadDir,
+        directory: appDir,
     });
 }
 
@@ -39,7 +40,7 @@ let win;
     await app.whenReady();
     win = new BrowserWindow({
         width: 800,
-        height: 420,
+        height: 480,
         frame: false,
         maximizable: false,
         transparent: true,
@@ -73,49 +74,156 @@ async function loadManifestFile() {
 
     loadingManifest = true;
 
-    fetch(`${downloadURL}/${manifestFile}`, { method: 'get' })
-        .then(res => res.json())
-        .then(manifest => {
-            readManifest(manifest);
-        });
+    readManifest();
 }
 
-async function readManifest(manifest) {
-    fs.writeFileSync(manifestPath, manifest);
+let currentManifest = null;
 
-    const zipFile = `${downloadDir}/${manifest.path}`;
+let oldManifest = null;
+
+function loadOldManifest() {
+    const defaultManifest = {
+        runtimeVersion: null,
+        gameVersion: null,
+        gamePath: null,
+        runtimePath: null,
+    };
+
+    if (fs.existsSync(manifestPath)) {
+        const oldManifestString = fs.readFileSync(manifestPath);
+
+        try {
+            oldManifest = JSON.parse(oldManifestString);
+        } catch(e) {
+            oldManifest = defaultManifest;
+        }
+    }
+}
+
+const bintrayAPI = 'https://api.bintray.com/packages/jefvel/karanten';
+const bintrayDLURL = 'https://dl.bintray.com/jefvel/karanten';
+
+function getRuntimeName() {
+    switch(os.platform()) {
+        case 'darwin': return 'runtime-mac';
+        case 'win32': return 'runtime-win';
+        default: return 'runtime-win';
+    }
+}
+
+async function readManifest() {
+    loadOldManifest();
+
+    let manifest = {...oldManifest};
+
+    const runtimeName = getRuntimeName();
+    const gameName = 'data';
+
+    sendStatusToWindow("Checking Game Version...");
+    const runtimeVersion = (await fetch(`${bintrayAPI}/${runtimeName}/versions/_latest`, { method: 'get' })
+        .then(res => res.json())).name;
+    if (oldManifest.runtimeVersion !== runtimeVersion) {
+        const runtimeInfo = (await fetch(`${bintrayAPI}/${runtimeName}/versions/${runtimeVersion}/files`, { method: 'get' })
+            .then(res => res.json()))[0];
+
+        manifest.runtimeVersion = runtimeInfo.version;
+        manifest.runtimePath = runtimeInfo.path;
+    }
+
+    const gameVersion = (await fetch(`${bintrayAPI}/${gameName}/versions/_latest`, { method: 'get' })
+        .then(res => res.json())).name;
+    
+    if (oldManifest.gameVersion !== gameVersion) {
+        const gameInfo = (await fetch(`${bintrayAPI}/${gameName}/versions/${gameVersion}/files`, { method: 'get' })
+            .then(res => res.json()))[0];
+
+        manifest.gameVersion = gameInfo.version;
+        manifest.gamePath = gameInfo.path;
+    }
 
     win.webContents.send('manifestInfo', manifest);
 
-    if (!fs.existsSync(zipFile)) {
-        sendStatusToWindow('Downloading New Game Files');
-        await download(win, `${downloadURL}/versions/${manifest.path}`, {
-            onProgress: p => {
-                win.webContents.send('setProgress', p.percent);
-            },
-            directory: downloadDir,
+    currentManifest = manifest;
+
+    const gameZipFile = `${appDir}/${manifest.gamePath}`;
+    const runtimeFile = `${appDir}/${manifest.runtimePath}`;
+
+    if (oldManifest.runtimeVersion !== manifest.runtimeVersion) {
+        if (!fs.existsSync(runtimeFile)) {
+            sendStatusToWindow('Downloading Runtime Files');
+
+            //`${downloadURL}/runtimes/${platform}/${manifest.runtime}`
+            const dlURL = `${bintrayDLURL}/${manifest.runtimePath}`;
+
+            await download(win, dlURL, {
+                onProgress: p => {
+                    win.webContents.send('setProgress', p.percent);
+                },
+                directory: `${appDir}`,
+            });
+        }
+
+        sendStatusToWindow('Extracting Runtime');
+        const e = fs.createReadStream(runtimeFile)
+            .pipe(unzipper.Extract({ path: `${appDir}/bin` }));
+
+        let p = new Promise((resolve) => {
+            e.on("close", () => {
+                fs.unlinkSync(runtimeFile);
+                resolve();
+            })
         });
+
+        await p.then;
     }
 
-    const e = fs.createReadStream(zipFile)
-        .pipe(unzipper.Extract({ path: `${downloadDir}/bin/latest` }));
+    if (oldManifest.gameVersion !== manifest.gameVersion) {
+        if (!fs.existsSync(gameZipFile)) {
+            sendStatusToWindow('Downloading Game Files');
+            const dlURL = `${bintrayDLURL}/${manifest.gamePath}`;
+            await download(win, dlURL, {
+                onProgress: p => {
+                    win.webContents.send('setProgress', p.percent);
+                },
+                directory: appDir,
+            });
+        }
 
-    e.on("close", () => {
-        gameReady = true;
-        win.webContents.send('enableStart');
-        sendStatusToWindow('Game Ready');
-    });
+        sendStatusToWindow('Extracting Game');
+        const e = fs.createReadStream(gameZipFile)
+            .pipe(unzipper.Extract({ path: `${appDir}/bin` }));
+
+        let p = new Promise((resolve) => {
+            e.on("close", () => {
+                fs.unlinkSync(gameZipFile);
+                resolve();
+            })
+        });
+
+        await p.then;
+    }
+
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+
+    gameReady();
 };
 
-let gameReady = false;
+let canLaunch = false;
+function gameReady() {
+    canLaunch = true;
+    win.webContents.send('enableStart');
+    sendStatusToWindow('Game Ready');
+}
 
 function launchGame() {
-    if (!gameReady) {
+    if (!canLaunch) {
         return;
     }
 
-    spawn(`${downloadDir}/bin/latest/quarantine.exe`, [`${downloadDir}/bin/latest/hlboot.dat`], {
-        cwd: `${downloadDir}`,
+    const exeDir = `${appDir}/bin`;
+
+    spawn(`${exeDir}/quarantine`, [`${exeDir}/hlboot.dat`], {
+        cwd: `${appDir}`,
         detached: true,
     });
 
@@ -150,9 +258,11 @@ function sendStatusToWindow(text) {
 autoUpdater.on('checking-for-update', () => {
   sendStatusToWindow('Checking for launcher update...');
 })
+
 autoUpdater.on('update-available', (info) => {
   sendStatusToWindow('Update available. Downloading...');
 })
+
 autoUpdater.on('update-not-available', (info) => {
   sendStatusToWindow('Launcher is up to date');
   loadManifestFile();
@@ -167,9 +277,6 @@ autoUpdater.on('download-progress', (progressObj) => {
 });
 
 autoUpdater.on('update-downloaded', (info) => {
-  sendStatusToWindow('Update downloaded');
+  sendStatusToWindow('Update downloaded. Installing...');
   autoUpdater.quitAndInstall();
-});
-
-app.on('ready', () => {
 });
