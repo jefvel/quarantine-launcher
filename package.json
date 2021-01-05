@@ -18,6 +18,18 @@
       "publish": [
         "github"
       ]
+    },
+    "mac": {
+      "publish": [
+        "github"
+      ],
+      "target": "dmg"
+    },
+    "linux": {
+      "publish": [
+        "github"
+      ],
+      "target": "tar.gz"
     }
   },
   "devDependencies": {
